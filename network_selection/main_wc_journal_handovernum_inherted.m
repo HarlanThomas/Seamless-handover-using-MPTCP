@@ -1,0 +1,499 @@
+%  using calculated weight to get utility 
+%  network attribute random created
+% clear;
+%%  
+%   RRS                  B           D               J                   L           C
+    a1 ={[1 1 3],        [3 5 7],    [0.2 0.33 1],   [1 3 5],            [1 3 5]     [0.25 0.5 1];     
+        [0.14 0.2 0.33], [1 1 3],    [0.25 0.5 1],   [0.17 0.25 0.5],    [1,2,4],    [0.125,0.17,0.25];
+        [1 3 5 ],        [1 2 4],    [1 1 3],        [0.2 -1.67 1],       [1 3 5],    [0.14 0.2 0.33];
+        [0.2 0.33 1],    [2 4 6],    [1 3 5],        [1 1 3],            [3 5 7],    [0.2 0.33 1];
+        [0.2 0.33 1],    [0.25 0.5 1],[0.2 0.33 1],  [0.14 0.2 0.33],    [1 1 3],    [0.11 0.14 0.2];
+        [1 2 4],         [4 6 8],    [3 5 7],        [1 3 5],            [5 7 9],    [1 -1 3] };
+    a2 ={[1 1 3],        [0.2 0.33 1],[3 5 7],       [5 7 9],            [1 3 5],    [1 3 5];
+        [1 3 5],         [1 1 3],     [1 2 4],       [0.17 0.25 0.5],    [4 6 8],    [4 6 8];
+        [0.14 0.2 0.33], [0.25 0.5 1],[1 1 3],       [0.14 0.2 0.33],    [1 3 5],    [1 3 5];
+        [0.14 0.2 0.33], [2 4 6],     [3 5 7],       [1 1 3],            [5 7 9],    [5 7 9];
+        [0.2 0.33 1],    [0.125 0.17 0.25],   [0.2 0.33 1],  [0.11 0.14 0.2], [1 1 3],    [1 1 3];
+        [0.2 0.33 1],    [0.125 0.17 0.25],   [0.2 0.33 1],  [0.11 0.14 0.2], [1 1 3],    [1 1 3]};
+    a3 ={[1 1 3],        [0.2 0.33 1],        [3 5 7],       [3 5 7],         [0.2 0.33 1],       [0.14 0.2 0.33];
+        [1 3 5],         [1 1 3],             [3 5 7],       [4 6 8],         [0.25 0.5 1],       [1 2 4];
+        [0.14 0.2 0.33], [0.14 0.2 0.33],     [1 1 3],       [1 2 4],         [0.125 0.17 0.25],  [0.17 0.25 0.5];
+        [0.14 0.2 0.33], [0.125 0.17 0.25],   [0.25 0.5 1],   [1 1 3],        [0.11 0.14 0.2],    [0.14 0.2 0.33];
+        [1 3 5],         [1 2 4],             [4 6 8],        [5 7 9],        [1 1 3],            [1 3 5];
+        [3 5 7],         [0.25 0.5 1],        [2 4 6],        [3 5 7],        [0.2 0.33 1],       [1 1 3]};
+    
+    w_1= calwtg(a1);
+    w_2= calwtg(a2);
+    w_3= calwtg(a3);
+
+    %%  above are the basic settings 
+    %% including service_priority combining weight ,this represents the user
+    % serve scenes    136   163     631
+
+    service_prioirity = [1 3 6];
+    topsis_w = [0.2 0.2 0.2 0.1 0.1 0.2];
+    std_para = 0; std_para
+    service_prioirity = service_prioirity / sum(service_prioirity);    
+    exp_coeff = 0.85;
+    velocity = 0;
+%     % initialize accumulating number
+%     if ~size(count_test)
+     count_test= zeros(4,1);        RSS_count_test = zeros(4,1);    MCDGM_count_test = zeros(4,1);  topsis_count_test = zeros(4,1);
+%     end
+    %    w_comb =  service_prioirity * [w_1; w_2; w_3];
+    handoverNUM =  0;        RSS_handoverNUM = 0;       MCGDM_handoverNUM =0;   handoverNUM_pos =  0;  topsis_handoverNUM = 0;
+    showhandover = [];       RSS_showhandover = [];     MCGDM_showhandover =[];      showhandover_pos = [];  topsis_showhandover = [];
+   
+    showutility = [];        RSS_showutility = [];      MCGDM_showutility =[];  topsis_showutility = [];
+    ave_utility = [];        RSS_ave_utility = [];      MCDGM_ave_utility = []; topsis_ave_utility = [];
+    cur_ID = 0;              RSS_cur_ID = 0;            MCGDM_cur_ID = 0;       topsis_cur_ID = 0;          cur_ID_pos = 0;  
+    best_net = 0;            RSS_best_net = 0;          MCGDM_best_net = 0;     topsis_best_net = 0;
+    
+    cross_net_num = 0;
+%     load('major_re_RSS_wcase.mat');    %     
+    load('data3.mat');  
+    location4 = input_seq{3} * 4000;
+    shownet = [];
+    MCGDM_shownet = [];
+   
+   
+    for i = 1: size(RSS, 1)
+        
+        %  calculate net attributes value  randomly 
+        net_contrib = attrib();
+        net_contrib(:,1) = RSS(i,:)';  
+        %  using utility function to normalize
+        m = size(net_contrib, 1);
+        
+        score=[];
+        final_score = zeros(m,1);
+        
+        %% proposed Algorithm
+        for j = 1 : m
+            each_net_attribute = net_contrib(j , :);
+            % voice 
+            voice_value(1) = f(each_net_attribute(1),0.15,-80); % RSS
+            voice_value(2) = f(each_net_attribute(2),0.25,48);  % Bandwidth
+            voice_value(3) = g(each_net_attribute(3),0.1,75);   % Delay
+            voice_value(4) = g(each_net_attribute(4),0.185,65); % Jitter
+            voice_value(5) = h(each_net_attribute(5),1/30);     % Loss Rate
+            voice_value(6) = h(each_net_attribute(6),1/50);     % Cost
+            % video 
+            video_value(1) = f(each_net_attribute(1),0.15,-80); 
+            video_value(2) = f(each_net_attribute(2),0.003,2000); 
+            video_value(3) = g(each_net_attribute(3),0.1,112.5); 
+            video_value(4) = g(each_net_attribute(4),0.175,55); 
+            video_value(5) = h(each_net_attribute(5),1/30); 
+            video_value(6) = h(each_net_attribute(6),1/50); 
+            % web
+            web_value(1) = f(each_net_attribute(1),0.15,-80); 
+            web_value(2) = f(each_net_attribute(2),0.01,564); 
+            web_value(3) = g(each_net_attribute(3),0.03,375); 
+            web_value(4) = g(each_net_attribute(4),0.05,80); 
+            web_value(5) = h(each_net_attribute(5),1/30); 
+            web_value(6) = h(each_net_attribute(6),1/50);         
+
+            score_voice = w_1 * voice_value';
+            score_video = w_2 * video_value';
+            score_web = w_3 * web_value';
+
+            final_score(j) = service_prioirity * [score_voice score_video score_web]' ;
+
+        end
+        
+        [ max_utility , best_net ]= max(final_score);
+        shownet(i) = best_net;
+        showutility(i) = max_utility;
+        count_test(best_net) =  count_test(best_net) + 1;
+        velocity = dist([location4( i, 4), location4( i, 8)],[location4( i, 3), location4( i, 7)]) / 60; 
+         
+         %%  FAHP 相关的计算  切换次数统计
+  
+         if (cur_ID== 0)
+             cur_ID = best_net; 
+    %     ||  best_net == cur_ID_pos
+        else
+            cross_net  = ( occupy_x(i,cur_ID) ~= occupy_x(i-1,cur_ID) ) || ...
+                                 ( occupy_y(i,cur_ID) ~= occupy_y(i-1,cur_ID)  );
+            is_handover = 0;
+            switch cross_net
+                case 1
+                    is_handover = 1;
+                    cur_ID = best_net;   
+                    handoverNUM = handoverNUM + is_handover;
+%                     fprintf ('cross\n');
+                case 0    % 在没有跨区的情况下
+                    if  (final_score(best_net) / final_score(cur_ID) >  1.07 )  
+                        is_handover = 1;
+                        cur_ID = best_net; 
+                    else
+                        is_handover = 0;
+                    end
+                    handoverNUM = handoverNUM + is_handover; 
+%                     fprintf ('no_cross\n');
+            end
+            %%
+         
+% % % %        if(cur_ID == 0 ||  best_net == cur_ID)
+% % % %             cur_ID = best_net;
+% % % %             
+% % % %        elseif ( final_score(best_net) / final_score(cur_ID) <= 1.08)
+% % % %        else     
+           
+%        elseif (...
+%            occupy_x(i,cur_ID) ~= occupy_x(i-1,cur_ID) || ...
+%                occupy_y(i,cur_ID) ~= occupy_y(i-1,cur_ID)  ||   ...
+%                (final_score(best_net) / final_score(cur_ID) >1.08)  ...    %  speed_control(velocity,1) ) ...   
+%                 )  % 同构网络跨越小区做切换统计, 并且切换到最优网络
+% % % %             
+% % % %             cur_ID = best_net;   
+% % % %             handoverNUM = handoverNUM +1;
+%         elseif(final_score(best_net) / final_score(cur_ID) <=  speed_control(velocity,0.4) )   %    1.2)  % Here set handover threshold
+%             cur_ID = cur_ID;
+%         else
+%            cur_ID = best_net;
+%             handoverNUM = handoverNUM +1;
+        end         
+     
+%         if(cur_ID == 0 ||best_net == cur_ID)
+%             cur_ID = best_net;
+            
+%        elseif (occupy_x(i,cur_ID) ~= occupy_x(i-1,cur_ID) ||  occupy_y(i,cur_ID) ~= occupy_y(i-1,cur_ID))  % 同构网络跨越小区做切换统计, 并且切换到最优网络
+%             cur_ID = best_net;   
+%             handoverNUM = handoverNUM +1;
+%             handoverNUM_pos = handoverNUM_pos + 1;
+            
+%         elseif(final_score(best_net) / final_score(cur_ID) <=  speed_control(velocity,0.4) )   %    1.2)  % Here set handover threshold
+%             cur_ID = cur_ID;
+%         elseif (final_score(best_net) / final_score(cur_ID) <=  speed_control(velocity,0.4) )
+%             cur_ID = best_net;
+%             handoverNUM = handoverNUM +1;  
+%         else
+%             handoverNUM = handoverNUM +1;
+%             handoverNUM_pos = handoverNUM_pos + 1;
+%          end
+       
+    %%  基于位置的切换统计, 同构网络之间的切换也算入其中
+        st_dev = 0.5 * ( std(location4(i, 1:4))  + std(location4(i, 5:8))) ; % 最大值 有 600  均值 9.14
+        [ max_utility , best_net ]= max(final_score);
+      
+        if (cur_ID_pos == 0)
+            cur_ID_pos = best_net; 
+    %     ||  best_net == cur_ID_pos
+        else
+            cross_net  = ( occupy_x(i,cur_ID_pos) ~= occupy_x(i-1,cur_ID_pos) ) || ...
+                                 ( occupy_y(i,cur_ID_pos) ~= occupy_y(i-1,cur_ID_pos)  );
+             is_handover = 0;
+            switch cross_net
+                case 1
+                    if  st_dev < std_para
+                    else
+                        is_handover = 1;
+                        cur_ID_pos = best_net;   
+                    end
+                    handoverNUM_pos = handoverNUM_pos + is_handover;
+%                     fprintf ('cross\n');
+                case 0    % 在没有跨区的情况下
+                    if  (final_score(best_net) / final_score(cur_ID_pos) >  1.07 )  
+                        is_handover = 1;
+                        cur_ID_pos = best_net;   
+                    end
+                    handoverNUM_pos = handoverNUM_pos + is_handover;
+%                     fprintf ('no_cross\n');
+            end
+        end  
+% % % % %  add in 1005
+%%
+            %   best_net  自锁问题可能是  网络 网络波动引起  
+
+%            
+%         elseif (    occupy_x(i,cur_ID_pos) ~= occupy_x(i-1,cur_ID_pos) || ...
+%                occupy_y(i,cur_ID_pos) ~= occupy_y(i-1,cur_ID_pos)      ||   ...     % 正常跨区
+%                 (  st_dev  >  12.9 ) ||   ...  %  大范围移动，或逻辑
+%                 (final_score(best_net) / final_score(cur_ID_pos) >  1.2 )  )% &&  ...   % 10 m 30s -12.9   20m  30s - 25.82
+%           %     (final_score(best_net) / final_score(cur_ID_pos) >  1 )   )...   
+%                 %)% 同构网络跨越小区做切换统计, 并且切换到最优网络
+%             
+%             cur_ID_pos = best_net;   
+%             handoverNUM_pos = handoverNUM_pos +1;
+%             
+% %         elseif(final_score(best_net) / final_score(cur_ID) <=  speed_control(velocity,0.4) )   %    1.2)  % Here set handover threshold
+% %             cur_ID = cur_ID;
+% %         else
+% %            cur_ID = best_net;
+% %             handoverNUM = handoverNUM +1;
+%         else
+%         end         
+%         
+        % 数据采集
+        showhandover(i) = handoverNUM;
+        showhd_pos(i)  = handoverNUM_pos;
+        showutility(i) =  final_score(cur_ID);
+%         ave_utility(i) = mean(showutility);
+        
+
+        if i <= 1
+            ave_utility(i) = showutility(i) ;
+        else
+            ave_utility(i) = exp_coeff * ave_utility(i-1) + (1-exp_coeff) * showutility(i) ;
+        end
+        
+        %%  RSS_based Algorithm 
+        RSS_score = net_contrib(:,1);
+        [~  ,RSS_best_net ] = max(RSS_score);
+        
+        RSS_count_test(RSS_best_net) = RSS_count_test(RSS_best_net) + 1;
+        if(RSS_cur_ID == 0 || RSS_best_net == RSS_cur_ID)
+            RSS_cur_ID = RSS_best_net;
+        elseif (occupy_x(i,RSS_cur_ID) ~= occupy_x(i - 1,RSS_cur_ID) || occupy_y(i,RSS_cur_ID) ~= occupy_y(i - 1,RSS_cur_ID))   % 跨越小区，在同构网络之间做切换，刷新网络索引值
+            RSS_cur_ID = RSS_best_net;      % handover
+            RSS_handoverNUM = RSS_handoverNUM +1;        
+        elseif(RSS_score(RSS_best_net) <=  RSS_score(RSS_cur_ID) )  % pick strongest RSS  wlan's RSS is set large
+            RSS_cur_ID = RSS_cur_ID;   
+        else
+            RSS_cur_ID = RSS_best_net;      % handover
+            RSS_handoverNUM = RSS_handoverNUM +1;
+        end
+        RSS_showhandover(i) =  RSS_handoverNUM;
+        RSS_showutility(i) = final_score( RSS_cur_ID );
+%         RSS_ave_utility(i) = mean(RSS_showutility);
+        
+        if i <= 1
+            RSS_ave_utility(i) = RSS_showutility(i) ;
+        else
+            RSS_ave_utility(i) = exp_coeff * RSS_ave_utility(i -1) + (1-exp_coeff) * RSS_showutility(i) ;
+        end
+        
+        
+        %%  MCGDM Algorithm
+        MCGDM_attibute = [net_contrib(:,6) ,net_contrib(:,2),net_contrib(:,3) ];
+        for k = 1: size(MCGDM_attibute,2)
+            if k == 2
+                max_of_col = max(MCGDM_attibute(:,k));
+                MCGDM_attibute(:,k) = MCGDM_attibute(:,k) ./ max_of_col;
+            else
+                min_of_col = min(MCGDM_attibute(:,k));
+                MCGDM_attibute(:,k) = min_of_col * ones(m,1) ./ MCGDM_attibute(:,k);
+            end
+        end  % calculate max/min normalize 
+        M_weight = [0.1668 0.25 0.5833;
+                    0.3636 0.409 0.2275;
+                    0.2352 0.4117 0.3530];
+        MCGDM_weight = service_prioirity * M_weight;
+        MCGDM_score = MCGDM_attibute * MCGDM_weight';
+        [ max_utility , MCGDM_best_net ]= max(MCGDM_score);  
+        MCGDM_shownet = [MCGDM_shownet ;MCGDM_best_net];
+        MCDGM_count_test(MCGDM_best_net) = MCDGM_count_test(MCGDM_best_net) + 1;
+
+        if(MCGDM_cur_ID == 0 ||MCGDM_best_net == MCGDM_cur_ID)
+            MCGDM_cur_ID = MCGDM_best_net;
+        elseif (occupy_x(i,MCGDM_cur_ID) ~= occupy_x(i - 1,MCGDM_cur_ID) || occupy_y(i,MCGDM_cur_ID) ~= occupy_y(i - 1,MCGDM_cur_ID))   % 跨越小区，在同构网络之间做切换，刷新网络索引值
+            MCGDM_cur_ID = MCGDM_best_net;      % handover
+            MCGDM_handoverNUM = MCGDM_handoverNUM +1;          
+        elseif(MCGDM_score(MCGDM_best_net) / MCGDM_score(MCGDM_cur_ID) <= 1.08)  % pick strongest RSS  wlan's RSS is set large
+            MCGDM_cur_ID = MCGDM_cur_ID;
+        else
+            MCGDM_cur_ID = MCGDM_best_net;      % handover
+            MCGDM_handoverNUM = MCGDM_handoverNUM +1;
+        end
+        
+        MCGDM_showhandover(i) = MCGDM_handoverNUM;
+        MCGDM_showutility(i) = final_score( MCGDM_cur_ID );
+%       MCGDM_ave_utility(i) = mean(MCGDM_showutility);
+        if i <= 1
+            MCDGM_ave_utility(i) = MCGDM_showutility(i) ;
+        else
+            MCDGM_ave_utility(i) = exp_coeff * MCDGM_ave_utility(i-1) + (1-exp_coeff) * MCGDM_showutility(i) ;
+        end
+        
+        
+        %% TOPSIS Algorithm, recalculate the network score use the same service prioprity as FAHP
+%       denote the para as _t for topsis
+%         m = size(net_contrib, 1);
+        topsis_r = zeros(m, 6);
+        for j = 1 : m
+            each_net_attribute = net_contrib(j , :);
+%             % voice 
+%             topsis_value(1) = f(each_net_attribute(1),0.15,-80); % RSS
+%             topsis_value(2) = f_marginal_benifit_inc_14(each_net_attribute(2) ./ 1000, 0, 3, 0.85);  % Bandwidth
+%             topsis_value(3) = f_marginal_benifit_desc_16(each_net_attribute(3), 100, 50, 0.8);      % Delay
+%             topsis_value(4) = f_marginal_benifit_desc_16(each_net_attribute(4) , 90, 30, 0.8);      % Jitter
+%             topsis_value(5) = f_marginal_benifit_desc_16(each_net_attribute(5) , 18, 10, 0.8);      % Loss Rate
+%             topsis_value(6) = f_monotonic_utility_17(each_net_attribute(6),50);     % Cost
+%             topsis_r(j, :) = topsis_value ./ (sum(topsis_value .* topsis_value));
+            
+            % voice 
+            voice_value(1) = f(each_net_attribute(1),0.15,-80); % RSS
+            voice_value(2) = f(each_net_attribute(2),0.25,48);  % Bandwidth
+            voice_value(3) = g(each_net_attribute(3),0.1,75);   % Delay
+            voice_value(4) = g(each_net_attribute(4),0.185,65); % Jitter
+            voice_value(5) = h(each_net_attribute(5),1/30);     % Loss Rate
+            voice_value(6) = h(each_net_attribute(6),1/50);     % Cost
+            topsis_r(j, :) = 1/3 * voice_value ./ (sum(voice_value .* voice_value));
+            % video 
+            video_value(1) = f(each_net_attribute(1),0.15,-80); 
+            video_value(2) = f(each_net_attribute(2),0.003,2000); 
+            video_value(3) = g(each_net_attribute(3),0.1,112.5); 
+            video_value(4) = g(each_net_attribute(4),0.175,55); 
+            video_value(5) = h(each_net_attribute(5),1/30); 
+            video_value(6) = h(each_net_attribute(6),1/50); 
+            topsis_r(j, :) = topsis_r(j, :) + 1/3 * video_value ./ (sum(video_value .* video_value));
+            % web
+            web_value(1) = f(each_net_attribute(1),0.15,-80); 
+            web_value(2) = f(each_net_attribute(2),0.01,564); 
+            web_value(3) = g(each_net_attribute(3),0.03,375); 
+            web_value(4) = g(each_net_attribute(4),0.05,80); 
+            web_value(5) = h(each_net_attribute(5),1/30); 
+            web_value(6) = h(each_net_attribute(6),1/50);  
+            topsis_r(j, :) = topsis_r(j, :) + 1/3 * web_value ./ (sum(web_value .* web_value));
+            
+            topsis_r(j, :) = voice_value ./ (sum(voice_value .* voice_value));
+        end
+        
+%   FAHP + TOPSIS
+    % 目前只考虑一种业务, 想要给UMTS 一些提升往往会导致 WimMax 超越 WLAN
+        ww_1 = [0.1 0.1 0.24 0.15 0.2 0.25];    % web service   [0.1 0.1 0.23 0.15 0.2 0.25]
+        ww_2 = [0.2 0.2 0.1 0.15 0.1 0.25];     % 在w_2 的时候，取ww, video service
+        ww_3 = [0.1 0.05 0.25 0.15 0.25 0.2]; % voice service
+        topsis_v = topsis_r;
+        for k = 1:6
+            % 视频业务 由于 Wimax 的偏激，最后特殊化向量[0.1 0.15 0.15 0.25 0.1 0.25]
+            topsis_v(:, k) = topsis_v(:, k) * ww_1(k);
+        end
+        A_plus = ones(1, 6);
+        A_minus = zeros(1, 6);
+%         A_plus = max(topsis_v);
+%         A_minus = min(topsis_v);
+        for k = 1 : m
+            S_plus = sqrt(sum((A_plus - topsis_v(k, :)).^2));
+            S_minus = sqrt(sum((A_minus - topsis_v(k, :)).^2));
+            topsis_c(k) = S_minus / (S_plus + S_minus); 
+        end
+        [topsis_score, topsis_best_net] = max(topsis_c);
+        topsis_count_test(topsis_best_net) = topsis_count_test(topsis_best_net) + 1;
+        
+        % 统计切换次数
+        st_dev = 0.5 * ( std(location4(i, 1:4))  + std(location4(i, 5:8))) ; % 最大值 有 600  均值 9.14
+%         [ topsis_max_utility, topsis_best_net ]= max(topsis_c);
+      
+        if (topsis_cur_ID == 0)
+            topsis_cur_ID = topsis_best_net; 
+        else
+            cross_net  = ( occupy_x(i,topsis_cur_ID) ~= occupy_x(i-1,topsis_cur_ID) ) || ...
+                                 ( occupy_y(i,topsis_cur_ID) ~= occupy_y(i-1,topsis_cur_ID));
+             topsis_is_handover = 0;
+             
+            switch cross_net
+                case 1
+                    if  st_dev < 0    % 方差容限越大，切换次数越少
+                    else
+                        topsis_is_handover = 1;
+                        topsis_cur_ID = topsis_best_net;   
+                    end
+                    topsis_handoverNUM = topsis_handoverNUM + topsis_is_handover;
+                    cross_net_num = cross_net_num +1;
+%                     fprintf ('cross\n');
+                case 0    % 在没有跨区的情况下
+                    if  (topsis_c(topsis_best_net) / topsis_c(topsis_cur_ID) >  1.04 )  
+                        topsis_is_handover = 1;
+                        topsis_cur_ID = topsis_best_net;   
+                    end
+                    topsis_handoverNUM = topsis_handoverNUM + topsis_is_handover;
+%                     fprintf ('no_cross\n');
+            end
+        end  
+        topsis_showhandover(i) = topsis_handoverNUM;
+
+        
+        
+        
+        
+    end     % 所有的次数的结束
+    
+    
+
+    % for clycle's end
+    %  using  utility func as filter 
+    % cal weight
+    % combining service priority
+%    
+%     t = 0 : 20
+%     t = t';
+%     y = h(t,1/30);
+%     plot(t,y);
+%     only calculate first 2 
+
+
+%% 保存选择概率的矩阵
+    count_matrix = [count_test, MCDGM_count_test, topsis_count_test];
+%     save('wc_maj_r_ctmat_s3_addsf','count_matrix');
+% different scenario
+%      save('maj_r_ctmat_s1_addsf','count_matrix');
+%      save('maj_r_RSSmat_addsf','RSS_count_test');
+
+
+%% 保存切换次数的矩阵
+
+     hd_numv0_addsf = showhandover;
+%      hd_numv0 = showhd_pos;         % 暂时将没有位置控制的版本存储出来 
+% % % % % % % % % %      save(['hd_num_v',num2str(velocity)],['hd_numv',num2str(velocity)]);
+%       save(['hd_num_v0_addsf'],['hd_numv0']);    % 在没有方差限制的情况下，切换的阈值调整为1.07
+%      hd_num_sd1000 = showhd_pos;
+% % % % % % % % %      save(['hd_num_sd1000'],['hd_num_sd1000']);
+%      save(['topsis_showhandover_addsf'],['topsis_showhandover']);
+%         save(['hd_numv0_addsf'],['hd_numv0_addsf']);
+     
+%%  保存切换次数矩阵
+% % 
+%     save('RSS_showhandover_addsf','RSS_showhandover');
+%     save('MCGDM_showhandover_addsf','MCGDM_showhandover');
+%     save('topsis_showhandover_addsf','topsis_showhandover');
+%     hd_num_sd0  = showhd_pos;  save(['hd_num_sd0_addsf'],['hd_num_sd0']);
+%     hd_num_sd12_9  = showhd_pos;  save(['hd_num_sd12_9_addsf'],['hd_num_sd12_9']);
+%     hd_num_sd25_8  = showhd_pos;  save(['hd_num_sd25_8_addsf'],['hd_num_sd25_8']);
+%     hd_num_sd50  = showhd_pos;  save(['hd_num_sd50_addsf'],['hd_num_sd50']);
+%     hd_num_sd100  = showhd_pos; save(['hd_num_sd100_addsf'],['hd_num_sd100']); 
+%     hd_num_sd1000  = showhd_pos; save(['hd_num_sd1000_addsf'],['hd_num_sd1000']); 
+%     hd_num_wc_sd12_9 = showhd_pos; save(['hd_num_wc_sd12_9'],['hd_num_wc_sd12_9']);
+
+    
+    
+%     hd_numsd0_addsf  = showhandover;
+
+
+%      save(['showhd_pos_mr0'], ['showhd_pos_mr0'])
+%      save('showhandover_pos','showhandover_pos' ); 
+       
+%      t = 1:1000sh
+%      plot (t, showhandover); hold on;
+% %      figure()
+% %      plot (t,showutility); hold on;  ylim([0 1]);
+% %      figure()
+% %      plot (t,MCGDM_showutility);    ylim([0 1]);
+%      legend();
+%      ylim([0 700])
+%      grid on;
+
+%%   Compare algorithm utility 
+% figure
+%  t =1:1000;
+%  plot(t, shownet(1:1000),t,MCGDM_shownet(1:1000));
+ 
+ 
+ 
+ 
+ 
+% figure;
+% plot (t, ave_utility,'Linewidth',0.75); hold on ;
+% plot (t, MCDGM_ave_utility,'Linewidth',0.75);  
+% plot (t, RSS_ave_utility,'Linewidth',0.75);
+% 
+% % plot( [t',t',t'], [ave_utility', RSS_ave_utility', MCDGM_ave_utility' ] );
+% ylim([0.6 0.95])
+% grid on;
+% legend('Proposed net socre','MCDGM net score', 'RSS net score' );
+% title('Selected network score ');
+% xlabel('Simulation times','FontSize',15);
+% ylabel('Net score','FontSize',15);
+
+
