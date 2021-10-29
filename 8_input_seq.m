@@ -1,10 +1,10 @@
-%% Auto conceptor ESN µÄ´úÂëÊµÏÖ
+%% Auto conceptor ESN çš„ä»£ç å®ç°
 %  edited by haonan tong in 2019/12/18
 %  added the input data as seq by thn in  2019/12/21
 %  
 % 
 clear;
-%% Ëæ»úĞòÁĞµÄ²úÉú
+%% éšæœºåºåˆ—çš„äº§ç”Ÿ
 x1 = 0.5 + 0.5 * cos(0.2*(1:1000));
 x2 = 0.5 + 0.5 * sin(0.2 * (1:1000));
 cyc = [x1 ; x2]';
@@ -20,15 +20,15 @@ for i = 1:1000/swithch_len
     u3 (swithch_len*(i-1) +swithch_len/2 +1 : swithch_len*i , :) = u1(swithch_len*(i-1) +swithch_len/2 +1 : swithch_len*i , :);
 end
 u_allpattern = {cyc; u3};
-%%  ½«ÊäÈëÊı¾İ½øĞĞ ¶ÑÆö    ËÄ¸öÊı¾İ¶ÔÓ¦Ò»¸öÊı¾İÊä³ö                
+%%  å°†è¾“å…¥æ•°æ®è¿›è¡Œ å †ç Œ    å››ä¸ªæ•°æ®å¯¹åº”ä¸€ä¸ªæ•°æ®è¾“å‡º                
 n_old = 4;
 uu =zeros(2,995,8);  yy = zeros(2,995,2);
 % uu = { }; yy = { };
 for i = 1 : size (u_allpattern, 1)
-    %  ·Ö±ğÈ¡³ö Á½ÖÖÄ£Ê½ ÅÅ³ÉÒ»ÁĞ
+    %  åˆ†åˆ«å–å‡º ä¸¤ç§æ¨¡å¼ æ’æˆä¸€åˆ—
     in_data = [ ];
     label_data = [ ];
-    u = cell2mat(u_allpattern(i));  % ¶ÁÈ¡Ò»ÖÖÄ£Ê½
+    u = cell2mat(u_allpattern(i));  % è¯»å–ä¸€ç§æ¨¡å¼
     for j = 1: size(u,1) - (n_old + 1)
         in_data = [in_data ; 
                         reshape( u( j : j + n_old - 1,:) ,[1,8])   ];
@@ -47,7 +47,7 @@ time  = 1:1000;
 % plot(time,u1,time,u3);
 NpLoad  = 2;
 
-%% ESN µÄ³õÊ¼ÅäÖÃ
+%% ESN çš„åˆå§‹é…ç½®
 N = 200; SR = 1.5;
 WinScaling = 1.5;       % scaling of pattern feeding weights
 biasScaling = 0.5;   
@@ -66,7 +66,7 @@ biasScaling = 0.5;
 W = SR * WRaw;
 Win = WinScaling * WinRaw;
 bias = biasScaling * biasRaw;
-% ÓĞ¹Ø Ê±ÆÚµÄÏŞ¶¨ 
+% æœ‰å…³ æ—¶æœŸçš„é™å®š 
 trainWashoutLength = 100;
 learnWLength = 500;
 allTrainArgs = zeros(N, NpLoad * learnWLength);
@@ -79,12 +79,12 @@ for p = 1
             XOldCue = zeros(N,learnWLength);
 %             pTemplate = zeros(learnWLength,dim_in);
             
-            x = zeros(N, 1);   % ×´Ì¬ ³õÊ¼»¯
+            x = zeros(N, 1);   % çŠ¶æ€ åˆå§‹åŒ–
 
-%         u = cell2mat(u_allpattern(p));  % ¶ÁÈ¡Ò»ÖÖÄ£Ê½
+%         u = cell2mat(u_allpattern(p));  % è¯»å–ä¸€ç§æ¨¡å¼
             u = squeeze( uu(p,:,:) );  
             y = squeeze(  yy(p,:,:) );            
-%% ESNµÄ washout
+%% ESNçš„ washout
             for n = 1:trainWashoutLength
                 u_n = u(n,:);
                 x =  tanh(W * x + Win * u_n' + bias);
@@ -92,44 +92,44 @@ for p = 1
             for n = 1: learnWLength
                 u_n = u(n + trainWashoutLength, :);
                 out = y(n,:);
-                XOldCue(:,n) = x;   % ÀúÊ·µÄ ÑµÁ·Êı¾İ  ×ö±£´æ£¨X£¨n£©£©
-                x = tanh(W * x + Win * u_n' + bias);   % ¼ÌĞø´«Öµ 
-                XCue(:,n) = x;   % cue ½×¶ÎµÄÊı¾İ¼¯   µ±ÏÂµÄ    X(n+1)
-                pTemplate(n,:) = u_n;  % ¶¯Á¦Ñ§Ä£ĞÍµÄ»º³å£¿  ÊäÈëµÄ±£´æ
+                XOldCue(:,n) = x;   % å†å²çš„ è®­ç»ƒæ•°æ®  åšä¿å­˜ï¼ˆXï¼ˆnï¼‰ï¼‰
+                x = tanh(W * x + Win * u_n' + bias);   % ç»§ç»­ä¼ å€¼ 
+                XCue(:,n) = x;   % cue é˜¶æ®µçš„æ•°æ®é›†   å½“ä¸‹çš„    X(n+1)
+                pTemplate(n,:) = u_n;  % åŠ¨åŠ›å­¦æ¨¡å‹çš„ç¼“å†²ï¼Ÿ  è¾“å…¥çš„ä¿å­˜
                 Predict(n, :) = out;
             end
             
             
-%%              ËùÓĞÄ£Ê½µÄÊäÈë½øĞĞ»º´æ 
+%%              æ‰€æœ‰æ¨¡å¼çš„è¾“å…¥è¿›è¡Œç¼“å­˜ 
 %             pTemplates(:,p) = pTemplate(end-measureTemplateLength+1:end);
-            allTrainArgs(:, (p-1)*learnWLength+1:p*learnWLength) = ...                  % 200*5k  £¨Éñ¾­ÔªÊıÄ¿*Ä£Ê½*ÑµÁ·³¤¶È£©
+            allTrainArgs(:, (p-1)*learnWLength+1:p*learnWLength) = ...                  % 200*5k  ï¼ˆç¥ç»å…ƒæ•°ç›®*æ¨¡å¼*è®­ç»ƒé•¿åº¦ï¼‰
             XCue;
             allTrainOldArgs(:, (p-1)*learnWLength+1:p*learnWLength) = ...
             XOldCue;
-            allTrainDTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % ËùÓĞµÄÊı¾İÊÇ 200* 5k    ×´Ì¬µÄ»º´æ ½Ğ×ö DT
-            Win * pTemplate';                       %    ½«À´µÄÏÂÒ»ÏìÓ¦
-            allTrainYTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % ÑµÁ·Ê¹ÓÃµÄ±êÇ© 1*5k
+            allTrainDTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % æ‰€æœ‰çš„æ•°æ®æ˜¯ 200* 5k    çŠ¶æ€çš„ç¼“å­˜ å«åš DT
+            Win * pTemplate';                       %    å°†æ¥çš„ä¸‹ä¸€å“åº”
+            allTrainYTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % è®­ç»ƒä½¿ç”¨çš„æ ‡ç­¾ 1*5k
             Predict';
 end
 
 TychonovAlphaD = .001;
 %%% pattern readout learning
 TychonovAlphaWout = 0.01;
-I = eye(N);  % ´¢±¸³Ø½ÚµãÊı
+I = eye(N);  % å‚¨å¤‡æ± èŠ‚ç‚¹æ•°
 
-D = (inv(allTrainOldArgs * allTrainOldArgs' + TychonovAlphaD * I) ...    % D¾ØÕóµÄ ²ÎÊı
+D = (inv(allTrainOldArgs * allTrainOldArgs' + TychonovAlphaD * I) ...    % DçŸ©é˜µçš„ å‚æ•°
         * allTrainOldArgs * allTrainDTargs')';
-    NRMSED = mean(nrmse(allTrainDTargs, D * allTrainOldArgs));      % ¾ØÕóDµÄNRMSE 
+    NRMSED = mean(nrmse(allTrainDTargs, D * allTrainOldArgs));      % çŸ©é˜µDçš„NRMSE 
 %% compute mean variance of x
 varx = mean(var(allTrainArgs'));
 %% cmpute Wout
-Wout = (inv(allTrainArgs * allTrainArgs' + TychonovAlphaWout * I) ...       % Áë»Ø¹é
+Wout = (inv(allTrainArgs * allTrainArgs' + TychonovAlphaWout * I) ...       % å²­å›å½’
     * allTrainArgs * allTrainYTargs')';             
 NRMSEWout =  sum( nrmse(allTrainYTargs, Wout * allTrainArgs) ) / dim_out ;
 fprintf('NRMSE   Wout = %0.2g  D = %0.2g \n ', NRMSEWout, NRMSED);   
 
-%% µÃµ½ D Wout ¾ØÕóÖ®ºó
-%% ESNµÄ Cue ¹ı³Ì 
+%% å¾—åˆ° D Wout çŸ©é˜µä¹‹å
+%% ESNçš„ Cue è¿‡ç¨‹ 
 NpTest = NpLoad;
 NpTestEff = NpLoad;
 SNRTests = [1];  
@@ -144,14 +144,14 @@ initialWashout = 100;
 cueLength = 100;
 cueNL = 0.0;
     
-yTest_PL_cue = zeros(measureRL, NpTest, dim_out);  %  £¨¼ì²âµÄ³¤¶È£¬¼ì²âµÄÄ£Ê½Êı£¬ĞòÁĞµÄÁĞÊı+1£©
+yTest_PL_cue = zeros(measureRL, NpTest, dim_out);  %  ï¼ˆæ£€æµ‹çš„é•¿åº¦ï¼Œæ£€æµ‹çš„æ¨¡å¼æ•°ï¼Œåºåˆ—çš„åˆ—æ•°+1ï¼‰
 yTest_PL_recall = zeros(measureRL, NpTest, dim_out);
 SV_PL = zeros(N,NpTest, size(SNRTests,2)+1);
     
 for p = 1
     % C learning and testing
         x = zeros(N,1);
-%         u = cell2mat(u_allpattern(p));  % ¶ÁÈ¡Ò»ÖÖÄ£Ê½
+%         u = cell2mat(u_allpattern(p));  % è¯»å–ä¸€ç§æ¨¡å¼
            % washout 
         u = squeeze( uu(p,:,:) );
         y = squeeze( yy(p,:,:) );
@@ -163,7 +163,7 @@ for p = 1
         C = zeros(N,N);
         SNRCue = Inf;
         b = sqrt(varx /  SNRCue);   
-        %% b£©cue ¹ı³Ì 
+        %% bï¼‰cue è¿‡ç¨‹ 
         figure()
         tmp = [ ];
         for n = 1:cueLength
@@ -173,14 +173,14 @@ for p = 1
             tmp  = [tmp; u_n];
         end
             t = 100:200;
-        plot(label_data(t,1)', label_data(t,2)', '-*'); hold on;   % Ô­Ê¼ĞÅºÅ
+        plot(label_data(t,1)', label_data(t,2)', '-*'); hold on;   % åŸå§‹ä¿¡å·
         
-        [U S V] = svd(C);             % CÆæÒìÖµ·Ö½â
-        SV_PL(:,p,1) = diag(S);    % CµÄÌØÕ÷Öµ    
+        [U S V] = svd(C);             % Cå¥‡å¼‚å€¼åˆ†è§£
+        SV_PL(:,p,1) = diag(S);    % Cçš„ç‰¹å¾å€¼    
          
         
-%%  b)   cue ½×¶Î
-        xBeforeMeasure = x;   % ÏÈ C cue ÑµÍê±£´æÆğÀ´
+%%  b)   cue é˜¶æ®µ
+        xBeforeMeasure = x;   % å…ˆ C cue è®­å®Œä¿å­˜èµ·æ¥
 
         for n = 1 : measureWashout
                x = C * tanh(W *  x + D * x + bias);
@@ -191,23 +191,23 @@ for p = 1
         for n = 1:measureRL   % runlen
                 r = tanh(W *  x + D * x + bias);
                 x = C * r;
-                yTest_PL_cue(n,p,:) = Wout * r;  % ²âÁ¿»ØÉùÖĞµÄÊä³ö¡£¡£¡£ÓÃr£¿
+                yTest_PL_cue(n,p,:) = Wout * r;  % æµ‹é‡å›å£°ä¸­çš„è¾“å‡ºã€‚ã€‚ã€‚ç”¨rï¼Ÿ
         end
         time_bias = initialWashout + cueLength;
         t = cueLength + 1 +initialWashout : cueLength + measureRL + initialWashout;
 %         plot( t , yTest_PL(:,p,1),'-+');
-        plot(yTest_PL_cue(1:10,p,1)', yTest_PL_cue(1:10,p,2)', '-+m'); hold on;   % Ô­Ê¼ĞÅºÅ
-        plot(yTest_PL_cue(10:end,p,1)', yTest_PL_cue(10:end,p,2)', '-+r' ); hold on;   % Ô­Ê¼ĞÅºÅ
+        plot(yTest_PL_cue(1:10,p,1)', yTest_PL_cue(1:10,p,2)', '-+m'); hold on;   % åŸå§‹ä¿¡å·
+        plot(yTest_PL_cue(10:end,p,1)', yTest_PL_cue(10:end,p,2)', '-+r' ); hold on;   % åŸå§‹ä¿¡å·
 
 
-        x = xBeforeMeasure;  % x ÓÖ»ØÈ¥ÁË
+        x = xBeforeMeasure;  % x åˆå›å»äº†
 
       %% Autoconcetptor
-        RLs = [1];  % recall µÄ´ÎÊıÓ¦¸ÃºÍ ÖÜÆÚ½ôÃÜ  Ïà¹Ø
+        RLs = [1];  % recall çš„æ¬¡æ•°åº”è¯¥å’Œ å‘¨æœŸç´§å¯†  ç›¸å…³
 
       for i = 1:size(RLs,2)
             % state and noise scaling factors a and b
-            b = sqrt(varx /  SNRTests(i));      % ÔëÉùÏµÊı
+            b = sqrt(varx /  SNRTests(i));      % å™ªå£°ç³»æ•°
             RL = RLs(i);      % runlen
             CadaptRateAfterCue = 0.01; % C adaptation rate
 
@@ -225,7 +225,7 @@ for p = 1
                 r = tanh(W *  x +  Win * u_n' + bias);
 %                 r = tanh(W *  x + D * x + bias);
                 x = C * r;
-                yTest_PL_recall(n,p,:) = Wout * r;   % ´æÔÚÁËµÚ2 Éî¶È
+                yTest_PL_recall(n,p,:) = Wout * r;   % å­˜åœ¨äº†ç¬¬2 æ·±åº¦
                  for nn = 1:RL
                         x = C * (tanh(W *  x + D * x + bias )+ b*randn(N,1));
                         C = C + CadaptRateAfterCue * ((x - C*x)*x' - aperture^(-2)*C);
