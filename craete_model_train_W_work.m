@@ -2,7 +2,7 @@ clear;
 load('data1.mat');
 NpLoad  = 3;
 
-%% ESN µÄ³õÊ¼ÅäÖÃ
+%% ESN çš„åˆå§‹é…ç½®
 N = 32; SR = 1.5;
 WinScaling = 1.5;       % scaling of pattern feeding weights
 biasScaling = 0.5;   
@@ -22,7 +22,7 @@ biasScaling = 0.5;
 W = SR * WRaw;
 Win = WinScaling * WinRaw;
 bias = biasScaling * biasRaw;
-% ÓĞ¹Ø Ê±ÆÚµÄÏŞ¶¨ 
+% æœ‰å…³ æ—¶æœŸçš„é™å®š 
 trainWashoutLength = 60;
 learnWLength = 3400;
 allTrainArgs = zeros(N, NpLoad * learnWLength);
@@ -34,15 +34,15 @@ all_mp_prediction = zeros(2, NpLoad * learnWLength);
 all_train =0;
 Input = zeros(dim_in, NpLoad * learnWLength);
 
-% ÑµÁ·½×¶Î
+% è®­ç»ƒé˜¶æ®µ
 for p =   1:2
             figure ()
             XCue = zeros(N,learnWLength);   
             XOldCue = zeros(N,learnWLength);
 %             pTemplate = zeros(learnWLength,dim_in);
-            x = zeros(N, 1);   % ×´Ì¬ ³õÊ¼»¯
+            x = zeros(N, 1);   % çŠ¶æ€ åˆå§‹åŒ–
 
-%         u = cell2mat(u_allpattern(p));  % ¶ÁÈ¡Ò»ÖÖÄ£Ê½
+%         u = cell2mat(u_allpattern(p));  % è¯»å–ä¸€ç§æ¨¡å¼
             u = cell2mat(squeeze( input_seq(p) ));  
             y = cell2mat(squeeze( output_seq(p) ));       
             
@@ -62,7 +62,7 @@ for p =   1:2
 %             a = 0;
             fprintf('Train Wout stage, a= %i \n', a);   
 
-%% ESNµÄ washout
+%% ESNçš„ washout
             for n = 1:trainWashoutLength
                 u_n = u( a+ n ,:);
                 x =  tanh(W * x + Win * u_n' + bias);
@@ -76,27 +76,27 @@ for p =   1:2
                 end    
                 u_n = u(n+ trainWashoutLength + a, :);
                 out = y(n+ trainWashoutLength + a ,:);
-                XOldCue(:,n) = x;   % ÀúÊ·µÄ ÑµÁ·Êı¾İ  ×ö±£´æ£¨X£¨n£©£©
-                x = tanh(W * x + Win * u_n' + bias);   % ¼ÌĞø´«Öµ 
-                XCue(:,n) = x;   % cue ½×¶ÎµÄÊı¾İ¼¯   µ±ÏÂµÄ    X(n+1)
-                pTemplate( n , : ) = u_n;  % ¶¯Á¦Ñ§Ä£ĞÍµÄ»º³å£¿  ÊäÈëµÄ±£´æ
+                XOldCue(:,n) = x;   % å†å²çš„ è®­ç»ƒæ•°æ®  åšä¿å­˜ï¼ˆXï¼ˆnï¼‰ï¼‰
+                x = tanh(W * x + Win * u_n' + bias);   % ç»§ç»­ä¼ å€¼ 
+                XCue(:,n) = x;   % cue é˜¶æ®µçš„æ•°æ®é›†   å½“ä¸‹çš„    X(n+1)
+                pTemplate( n , : ) = u_n;  % åŠ¨åŠ›å­¦æ¨¡å‹çš„ç¼“å†²ï¼Ÿ  è¾“å…¥çš„ä¿å­˜
                 Predict(n, :) = out;
                 
                 
             end
-            plot(pTemplate( : ,4)', pTemplate( : , 8)', '-+b'); hold on;   % Ô­Ê¼ĞÅºÅ
-            plot(Predict( : , 1)', Predict( : , 2)', 'o-m' );               hold on;   % Ô­Ê¼ĞÅºÅ
+            plot(pTemplate( : ,4)', pTemplate( : , 8)', '-+b'); hold on;   % åŸå§‹ä¿¡å·
+            plot(Predict( : , 1)', Predict( : , 2)', 'o-m' );               hold on;   % åŸå§‹ä¿¡å·
             
-%%              ËùÓĞÄ£Ê½µÄÊäÈë½øĞĞ»º´æ 
+%%              æ‰€æœ‰æ¨¡å¼çš„è¾“å…¥è¿›è¡Œç¼“å­˜ 
 %             pTemplates(:,p) = pTemplate(end-measureTemplateLength+1:end);
             Input(:,(p-1)*learnWLength+1:p*learnWLength) = pTemplate';
-            allTrainArgs(:, (p-1)*learnWLength+1:p*learnWLength) = ...                  % 200*5k  £¨Éñ¾­ÔªÊıÄ¿*Ä£Ê½*ÑµÁ·³¤¶È£©
+            allTrainArgs(:, (p-1)*learnWLength+1:p*learnWLength) = ...                  % 200*5k  ï¼ˆç¥ç»å…ƒæ•°ç›®*æ¨¡å¼*è®­ç»ƒé•¿åº¦ï¼‰
             XCue;
             allTrainOldArgs(:, (p-1)*learnWLength+1:p*learnWLength) = ...
             XOldCue;
-            allTrainDTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % ËùÓĞµÄÊı¾İÊÇ 200* 5k    ×´Ì¬µÄ»º´æ ½Ğ×ö DT
-            Win * pTemplate';                       %    ½«À´µÄÏÂÒ»ÏìÓ¦
-            allTrainYTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % ÑµÁ·Ê¹ÓÃµÄ±êÇ© 1*5k
+            allTrainDTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % æ‰€æœ‰çš„æ•°æ®æ˜¯ 200* 5k    çŠ¶æ€çš„ç¼“å­˜ å«åš DT
+            Win * pTemplate';                       %    å°†æ¥çš„ä¸‹ä¸€å“åº”
+            allTrainYTargs(:, (p-1)*learnWLength+1:p*learnWLength) = ...            % è®­ç»ƒä½¿ç”¨çš„æ ‡ç­¾ 1*5k
             Predict';
             all_mp_prediction(:, (p-1)*learnWLength+1:p*learnWLength) = ...
                 p_mp';
@@ -106,18 +106,18 @@ TychonovAlphaD = .001;
 %%% pattern readout learning
 TychonovAlphaWout = 0.01;
 TychonovAlphaW_mpout = 0.01;
-I = eye(N);  % ´¢±¸³Ø½ÚµãÊı
+I = eye(N);  % å‚¨å¤‡æ± èŠ‚ç‚¹æ•°
 
-D = (inv(allTrainOldArgs * allTrainOldArgs' + TychonovAlphaD * I) ...    % D¾ØÕóµÄ ²ÎÊı
+D = (inv(allTrainOldArgs * allTrainOldArgs' + TychonovAlphaD * I) ...    % DçŸ©é˜µçš„ å‚æ•°
         * allTrainOldArgs * allTrainDTargs')';
-    NRMSED = mean(nrmse(allTrainDTargs, D * allTrainOldArgs));      % ¾ØÕóDµÄNRMSE 
+    NRMSED = mean(nrmse(allTrainDTargs, D * allTrainOldArgs));      % çŸ©é˜µDçš„NRMSE 
 %% compute mean variance of x
 varx = mean(var(allTrainArgs'));
 %% cmpute Wout
-Wout = (inv(allTrainArgs * allTrainArgs' + TychonovAlphaWout * I) ...       % Áë»Ø¹é
+Wout = (inv(allTrainArgs * allTrainArgs' + TychonovAlphaWout * I) ...       % å²­å›å½’
     * allTrainArgs * allTrainYTargs')';             
 NRMSEWout =  sum( nrmse(allTrainYTargs, Wout * allTrainArgs) ) / dim_out ;
-W_mpout = (inv(allTrainArgs * allTrainArgs' + TychonovAlphaW_mpout * I) ...       % Áë»Ø¹é
+W_mpout = (inv(allTrainArgs * allTrainArgs' + TychonovAlphaW_mpout * I) ...       % å²­å›å½’
     * allTrainArgs *all_mp_prediction' )';  
 NRMSEW_mpout =  sum( nrmse(all_mp_prediction, W_mpout * allTrainArgs) )  /1  ;
 fprintf('NRMSE   Wout = %.4g W_mpout = %.4g D = %.4g  \n ', NRMSEWout, NRMSEW_mpout, NRMSED);   
